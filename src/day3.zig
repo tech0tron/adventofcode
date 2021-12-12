@@ -32,3 +32,52 @@ pub fn day3() anyerror!void {
         // epsilon: 3878
     }
 }
+
+pub fn leastCommonBitAtDigit(allocator: *std.mem.Allocator, numbers: std.ArrayList([]u8), digit: usize) anyerror!std.ArrayList([]u8) {
+    var oneAtDigit = std.ArrayList([]u8).init(allocator);
+    var zeroAtDigit = std.ArrayList([]u8).init(allocator);
+
+    for (numbers.items) |item| {
+        if (item[digit] == 49) {
+            try oneAtDigit.append(item);
+        } else {
+            try zeroAtDigit.append(item);
+        }
+    }
+
+    if (oneAtDigit.items.len > zeroAtDigit.items.len) {
+        oneAtDigit.clearAndFree();
+        return zeroAtDigit;
+    } else {
+        zeroAtDigit.clearAndFree();
+        return oneAtDigit;
+    }
+
+    return arrayList;
+}
+
+pub fn day3_part2() anyerror!void {
+    var gpa = std.heap.GeneralPurposeAllocator(.{}){};
+    var allocator = &gpa.allocator;
+    
+    var oxygenList = std.ArrayList([]u8).init(allocator);
+
+    const content = try std.fs.cwd().readFileAlloc(allocator, "day3.txt", std.math.maxInt(usize));
+    var numbers = std.mem.split(content, "\n");
+
+    while (numbers.next()) |number| {
+        var newNumber = try allocator.alloc(u8, number.len);
+        std.mem.copy(u8, newNumber, number);
+        try oxygenList.append(newNumber);
+    }
+
+    var digit: usize = 0;
+    while (oxygenList.items.len > 1) {
+        oxygenList = try leastCommonBitAtDigit(allocator, oxygenList, digit);
+        digit += 1;
+    }
+
+    std.debug.print("{s}", .{oxygenList.items[0]});
+    // oxygen: 1176 
+    // c02 scrubber: 4076
+}
